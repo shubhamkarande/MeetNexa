@@ -41,21 +41,35 @@ export default function MeetingPage() {
     setMeetingCode(code)
     setIsHost(hostParam === 'true')
     
-    // Check if user is authenticated
-    const unsubscribe = auth.onAuthStateChanged(async (user) => {
-      if (user) {
-        setUser(user)
-        if (hostParam === 'true') {
-          setIsInLobby(true)
+    // Check if Firebase is configured
+    const isFirebaseConfigured = process.env.NEXT_PUBLIC_FIREBASE_API_KEY && 
+      process.env.NEXT_PUBLIC_FIREBASE_API_KEY !== 'AIzaSyC-REPLACE-WITH-YOUR-ACTUAL-API-KEY'
+    
+    if (isFirebaseConfigured) {
+      // Check if user is authenticated
+      const unsubscribe = auth.onAuthStateChanged(async (user) => {
+        if (user) {
+          setUser(user)
+          if (hostParam === 'true') {
+            setIsInLobby(true)
+          }
+          setLoading(false)
+        } else {
+          setShowAuth(true)
+          setLoading(false)
         }
-        setLoading(false)
-      } else {
-        setShowAuth(true)
-        setLoading(false)
-      }
-    })
+      })
 
-    return () => unsubscribe()
+      return () => unsubscribe()
+    } else {
+      // Skip authentication for demo
+      console.warn('Firebase not configured - running in demo mode')
+      setUser({ uid: 'demo-user', email: 'demo@example.com' } as any)
+      if (hostParam === 'true') {
+        setIsInLobby(true)
+      }
+      setLoading(false)
+    }
   }, [params.code, searchParams, router, setMeetingCode, setIsHost, setUser, setIsInLobby])
 
   const handleAuthSuccess = () => {
